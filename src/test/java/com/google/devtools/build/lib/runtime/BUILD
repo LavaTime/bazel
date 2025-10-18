@@ -167,6 +167,20 @@ java_test(
 )
 
 java_test(
+    name = "RunCommandLineGetPrettyArgsTest",
+    srcs = ["commands/RunCommandLineGetPrettyArgsTest.java"],
+    deps = [
+        "//src/main/java/com/google/devtools/build/lib:runtime",
+        "//src/main/java/com/google/devtools/build/lib/runtime/commands",
+        "//src/main/java/com/google/devtools/build/lib/vfs",
+        "//src/main/java/com/google/devtools/build/lib/vfs/inmemoryfs",
+        "//third_party:guava",
+        "//third_party:junit4",
+        "//third_party:truth",
+    ],
+)
+
+java_test(
     name = "DumpCommandTest",
     srcs = ["commands/DumpCommandTest.java"],
     deps = [

@@ -118,6 +118,14 @@ public class RunCommand implements BlazeCommand {
   /** Options for the "run" command. */
   public static class RunOptions extends OptionsBase {
     @Option(
+        name = "show_run_args",
+        defaultValue = "false",
+        documentationCategory = OptionDocumentationCategory.LOGGING,
+        effectTags = {OptionEffectTag.TERMINAL_OUTPUT},
+        help = "If true, shows the arguments passed to the runnable target in the log.")
+    public boolean showRunArgs;
+
+    @Option(
         name = "script_path",
         defaultValue = "null",
         documentationCategory = OptionDocumentationCategory.OUTPUT_PARAMETERS,
@@ -268,7 +276,13 @@ public class RunCommand implements BlazeCommand {
     try {
       runCommandLine =
           getCommandLineInfo(
-              env, builtTargets, options, argsFromResidue, runOptions.runEnvironment, testPolicy);
+              env,
+              builtTargets,
+              options,
+              argsFromResidue,
+              runOptions.runEnvironment,
+              testPolicy,
+              runOptions.showRunArgs);
     } catch (RunCommandException e) {
       return e.result;
     }
@@ -638,10 +652,12 @@ public class RunCommand implements BlazeCommand {
       OptionsParsingResult options,
       ImmutableList<String> argsFromResidue,
       List<Converters.EnvVar> extraRunEnvironment,
-      TestPolicy testPolicy)
+      TestPolicy testPolicy,
+      boolean showRunArgs)
       throws RunCommandException {
     if (builtTargets.targetToRun.getProvider(TestProvider.class) != null) {
-      return getTestCommandLine(env, builtTargets, options, argsFromResidue, testPolicy);
+      return getTestCommandLine(
+          env, builtTargets, options, argsFromResidue, testPolicy, showRunArgs);
     }
 
     ActionEnvironment actionEnvironment = ActionEnvironment.EMPTY;
@@ -690,7 +706,8 @@ public class RunCommand implements BlazeCommand {
         ImmutableSortedSet.copyOf(
             Iterables.concat(envVariablesToClear, ENV_VARIABLES_TO_CLEAR_UNCONDITIONALLY)),
         getBinaryArgs(builtTargets.targetToRun),
-        argsFromResidue);
+        argsFromResidue,
+        showRunArgs);
   }
 
   /**
@@ -702,7 +719,8 @@ public class RunCommand implements BlazeCommand {
       BuiltTargets builtTargets,
       OptionsParsingResult options,
       ImmutableList<String> argsFromResidue,
-      TestPolicy testPolicy)
+      TestPolicy testPolicy,
+      boolean showRunArgs)
       throws RunCommandException {
     ImmutableList<Artifact.DerivedArtifact> statusArtifacts =
         TestProvider.getTestStatusArtifacts(builtTargets.targetToRun);
@@ -784,7 +802,8 @@ public class RunCommand implements BlazeCommand {
             ImmutableSortedMap.copyOf(runEnvironment),
             ENV_VARIABLES_TO_CLEAR_UNCONDITIONALLY,
             /* workingDir= */ execRoot,
-            /* isTestTarget= */ true)
+            /* isTestTarget= */ true,
+            showRunArgs)
         .addArgs(testArgs)
         .addArgsFromResidue(argsFromResidue)
         .build();
@@ -811,7 +830,8 @@ public class RunCommand implements BlazeCommand {
       ImmutableSortedMap<String, String> runEnvironment,
       ImmutableSortedSet<String> envVariablesToClear,
       ImmutableList<String> argsFromBinary,
-      ImmutableList<String> argsFromResidue) {
+      ImmutableList<String> argsFromResidue,
+      boolean showRunArgs) {
     BuildRequestOptions requestOptions = env.getOptions().getOptions(BuildRequestOptions.class);
     PathPrettyPrinter prettyPrinter =
         new PathPrettyPrinter(
@@ -826,7 +846,8 @@ public class RunCommand implements BlazeCommand {
             /* workingDir= */ builtTargets.targetToRunRunfilesDir != null
                 ? builtTargets.targetToRunRunfilesDir
                 : env.getWorkingDirectory(),
-            /* isTestTarget= */ false);
+            /* isTestTarget= */ false,
+            showRunArgs);
 
     RunUnder runUnder = env.getOptions().getOptions(CoreOptions.class).runUnder;
     // Insert the command prefix specified by the "--run_under=<command-prefix>" option
