@@ -47,6 +47,7 @@ class RunCommandLine {
   private final Path workingDir;
 
   private final boolean isTestTarget;
+  private final boolean showRunArgs;
 
   private RunCommandLine(
       ImmutableList<String> args,
@@ -57,7 +58,8 @@ class RunCommandLine {
       ImmutableSortedMap<String, String> runEnvironment,
       ImmutableSortedSet<String> environmentVariablesToClear,
       Path workingDir,
-      boolean isTestTarget) {
+      boolean isTestTarget,
+      boolean showRunArgs) {
     this.args = args;
     this.prettyArgs = prettyArgs;
     this.residue = residue;
@@ -67,6 +69,7 @@ class RunCommandLine {
     this.environmentVariablesToClear = environmentVariablesToClear;
     this.workingDir = workingDir;
     this.isTestTarget = isTestTarget;
+    this.showRunArgs = showRunArgs;
   }
 
   Path getWorkingDir() {
@@ -103,7 +106,13 @@ class RunCommandLine {
       result.append(ShellEscaper.escapeString(prettyArgs.get(i)));
     }
     if (!residue.isEmpty()) {
-      result.append(" <args omitted>");
+      if (showRunArgs) {
+        for (String arg : residue) {
+          result.append(" ").append(ShellEscaper.escapeString(arg));
+        }
+      } else {
+        result.append(" <args omitted>");
+      }
     }
     return result.toString();
   }
@@ -322,6 +331,7 @@ class RunCommandLine {
     private final ImmutableSortedSet<String> environmentVariablesToClear;
     private final Path workingDir;
     private final boolean isTestTarget;
+    private final boolean showRunArgs;
 
     @Nullable private String runUnderPrefix;
     @Nullable private String prettyRunUnderPrefix;
@@ -334,11 +344,13 @@ class RunCommandLine {
         ImmutableSortedMap<String, String> runEnvironment,
         ImmutableSortedSet<String> environmentVariablesToClear,
         Path workingDir,
-        boolean isTestTarget) {
+        boolean isTestTarget,
+        boolean showRunArgs) {
       this.runEnvironment = runEnvironment;
       this.environmentVariablesToClear = environmentVariablesToClear;
       this.workingDir = workingDir;
       this.isTestTarget = isTestTarget;
+      this.showRunArgs = showRunArgs;
     }
 
     @CanIgnoreReturnValue
@@ -409,7 +421,8 @@ class RunCommandLine {
           runEnvironment,
           environmentVariablesToClear,
           workingDir,
-          isTestTarget);
+          isTestTarget,
+          showRunArgs);
     }
   }
 }
