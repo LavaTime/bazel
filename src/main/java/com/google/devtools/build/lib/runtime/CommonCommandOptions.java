@@ -100,14 +100,6 @@ public class CommonCommandOptions extends OptionsBase {
   public boolean announceRcOptions;
 
   @Option(
-      name = "show_run_args",
-      defaultValue = "false",
-      documentationCategory = OptionDocumentationCategory.LOGGING,
-      effectTags = {OptionEffectTag.AFFECTS_OUTPUTS},
-      help = "If true, shows the arguments passed to the runnable target in the log.")
-  public boolean showRunArgs;
-
-  @Option(
       name = "always_profile_slow_operations",
       defaultValue = "true",
       documentationCategory = OptionDocumentationCategory.UNDOCUMENTED,

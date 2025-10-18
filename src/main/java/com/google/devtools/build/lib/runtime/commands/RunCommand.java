@@ -72,7 +72,6 @@ import com.google.devtools.build.lib.runtime.BlazeCommandResult;
 import com.google.devtools.build.lib.runtime.BlazeServerStartupOptions;
 import com.google.devtools.build.lib.runtime.Command;
 import com.google.devtools.build.lib.runtime.CommandEnvironment;
-import com.google.devtools.build.lib.runtime.CommonCommandOptions;
 import com.google.devtools.build.lib.server.CommandProtos;
 import com.google.devtools.build.lib.server.CommandProtos.EnvironmentVariable;
 import com.google.devtools.build.lib.server.CommandProtos.ExecRequest;
@@ -118,6 +117,14 @@ import javax.annotation.Nullable;
 public class RunCommand implements BlazeCommand {
   /** Options for the "run" command. */
   public static class RunOptions extends OptionsBase {
+    @Option(
+        name = "show_run_args",
+        defaultValue = "false",
+        documentationCategory = OptionDocumentationCategory.LOGGING,
+        effectTags = {OptionEffectTag.AFFECTS_OUTPUTS},
+        help = "If true, shows the arguments passed to the runnable target in the log.")
+    public boolean showRunArgs;
+
     @Option(
         name = "script_path",
         defaultValue = "null",
@@ -267,7 +274,6 @@ public class RunCommand implements BlazeCommand {
         ImmutableList.copyOf(targetAndArgs.subList(1, targetAndArgs.size()));
     RunCommandLine runCommandLine;
     try {
-      CommonCommandOptions commonOptions = options.getOptions(CommonCommandOptions.class);
       runCommandLine =
           getCommandLineInfo(
               env,
@@ -276,7 +282,7 @@ public class RunCommand implements BlazeCommand {
               argsFromResidue,
               runOptions.runEnvironment,
               testPolicy,
-              commonOptions.showRunArgs);
+              runOptions.showRunArgs);
     } catch (RunCommandException e) {
       return e.result;
     }
@@ -650,7 +656,8 @@ public class RunCommand implements BlazeCommand {
       boolean showRunArgs)
       throws RunCommandException {
     if (builtTargets.targetToRun.getProvider(TestProvider.class) != null) {
-      return getTestCommandLine(env, builtTargets, options, argsFromResidue, testPolicy, showRunArgs);
+      return getTestCommandLine(
+          env, builtTargets, options, argsFromResidue, testPolicy, showRunArgs);
     }
 
     ActionEnvironment actionEnvironment = ActionEnvironment.EMPTY;
@@ -795,8 +802,7 @@ public class RunCommand implements BlazeCommand {
             ImmutableSortedMap.copyOf(runEnvironment),
             ENV_VARIABLES_TO_CLEAR_UNCONDITIONALLY,
             /* workingDir= */ execRoot,
-            /* isTestTarget= */ true,
-            showRunArgs)
+            /* isTestTarget= */ true)
         .addArgs(testArgs)
         .addArgsFromResidue(argsFromResidue)
         .build();
@@ -839,8 +845,7 @@ public class RunCommand implements BlazeCommand {
             /* workingDir= */ builtTargets.targetToRunRunfilesDir != null
                 ? builtTargets.targetToRunRunfilesDir
                 : env.getWorkingDirectory(),
-            /* isTestTarget= */ false,
-            showRunArgs);
+            /* isTestTarget= */ false);
 
     RunUnder runUnder = env.getOptions().getOptions(CoreOptions.class).runUnder;
     // Insert the command prefix specified by the "--run_under=<command-prefix>" option
