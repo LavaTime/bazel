@@ -121,7 +121,7 @@ public class RunCommand implements BlazeCommand {
         name = "show_run_args",
         defaultValue = "false",
         documentationCategory = OptionDocumentationCategory.LOGGING,
-        effectTags = {OptionEffectTag.AFFECTS_OUTPUTS},
+        effectTags = {OptionEffectTag.TERMINAL_OUTPUT},
         help = "If true, shows the arguments passed to the runnable target in the log.")
     public boolean showRunArgs;
 
@@ -802,7 +802,8 @@ public class RunCommand implements BlazeCommand {
             ImmutableSortedMap.copyOf(runEnvironment),
             ENV_VARIABLES_TO_CLEAR_UNCONDITIONALLY,
             /* workingDir= */ execRoot,
-            /* isTestTarget= */ true)
+            /* isTestTarget= */ true,
+            showRunArgs)
         .addArgs(testArgs)
         .addArgsFromResidue(argsFromResidue)
         .build();
@@ -845,7 +846,8 @@ public class RunCommand implements BlazeCommand {
             /* workingDir= */ builtTargets.targetToRunRunfilesDir != null
                 ? builtTargets.targetToRunRunfilesDir
                 : env.getWorkingDirectory(),
-            /* isTestTarget= */ false);
+            /* isTestTarget= */ false,
+            showRunArgs);
 
     RunUnder runUnder = env.getOptions().getOptions(CoreOptions.class).runUnder;
     // Insert the command prefix specified by the "--run_under=<command-prefix>" option
